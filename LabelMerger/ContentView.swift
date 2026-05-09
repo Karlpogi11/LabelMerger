@@ -203,6 +203,10 @@ struct ContentView: View {
 
             Spacer()
 
+            Text("by Karl Garcia")
+                .font(.system(size: 10))
+                .foregroundColor(Color.secondary.opacity(0.55))
+
             Button("Clear") {
                 clearDroppedData()
             }
