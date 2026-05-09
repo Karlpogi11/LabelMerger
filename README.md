@@ -1,19 +1,19 @@
 # LabelMerger
 
-Merge a dropped label PDF with your overlay PDF on macOS.
+LabelMerger is for PMG to reduce repeating printing by quickly merging label PDFs with a standard overlay.
 
-## Download (easy)
+## Install (Terminal)
 
-1. Open Releases: https://github.com/Karlpogi11/LabelMerger/releases
-2. Download `LabelMerger-macOS.zip`
-3. Unzip and move `LabelMerger.app` to `~/Applications`
-
-## Local install script
+1. Open `Terminal` on macOS.
+2. Paste this command and press `Enter`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Karlpogi11/LabelMerger/main/install.sh | bash
 ```
 
-- Installs to `~/Applications/LabelMerger.app`
-- Local only
-- Falls back to local source build when no release asset exists yet
+3. Open `LabelMerger` from `~/Applications`.
+
+Notes:
+- Set overlay first before dragging any label file.
+- Use PDF files for best results.
+- This app is local-only and installs to `~/Applications/LabelMerger.app`.
