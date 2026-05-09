@@ -15,20 +15,7 @@ struct ContentView: View {
     @State private var safekeepingURL: URL? = nil
     @State private var showFilePicker = false
     @State private var droppedLabelURL: URL? = nil
-    @State private var previewURL: URL? = nil
-
     private let redactedKeyword = "confidential"
-
-    private var isPreviewPresented: Binding<Bool> {
-        Binding(
-            get: { previewURL != nil },
-            set: { isPresented in
-                if !isPresented {
-                    previewURL = nil
-                }
-            }
-        )
-    }
 
     private var canClear: Bool {
         switch mergeState {
@@ -59,11 +46,6 @@ struct ContentView: View {
         .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first {
                 saveSafekeepingBookmark(url: url)
-            }
-        }
-        .sheet(isPresented: isPreviewPresented) {
-            if let previewURL {
-                PDFPreviewSheet(url: previewURL)
             }
         }
     }
@@ -230,13 +212,6 @@ struct ContentView: View {
             .disabled(!canClear)
 
             if case .success(let url) = mergeState {
-                Button(action: { previewURL = url }) {
-                    Label("Preview", systemImage: "doc.richtext")
-                        .font(.system(size: 10))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(.accentColor)
-
                 Button(action: { NSWorkspace.shared.open(url) }) {
                     Label("Open PDF", systemImage: "eye")
                         .font(.system(size: 10))
@@ -425,7 +400,7 @@ struct ContentView: View {
             if mergedDoc.write(to: outputURL) {
                 DispatchQueue.main.async {
                     mergeState = .success(outputURL)
-                    previewURL = outputURL
+                    NSWorkspace.shared.open(outputURL)
                 }
             } else {
                 DispatchQueue.main.async {
@@ -440,7 +415,6 @@ struct ContentView: View {
     func clearDroppedData() {
         mergeState = .idle
         droppedLabelURL = nil
-        previewURL = nil
     }
 
     // MARK: - Redaction
@@ -486,70 +460,5 @@ struct ContentView: View {
         }
 
         return results
-    }
-}
-
-private struct PDFPreviewSheet: View {
-    let url: URL
-    @Environment(\.dismiss) private var dismiss
-
-    private var fileName: String {
-        url.lastPathComponent
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(fileName)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1)
-                Spacer()
-                Button("Print") {
-                    printPDF()
-                }
-                .buttonStyle(.bordered)
-                Button("Close") {
-                    dismiss()
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-
-            Divider()
-
-            PDFPreviewRepresentable(url: url)
-                .background(Color(NSColor.textBackgroundColor))
-        }
-        .frame(minWidth: 760, minHeight: 520)
-    }
-
-    private func printPDF() {
-        guard let document = PDFDocument(url: url) else { return }
-        guard let operation = document.printOperation(for: nil, scalingMode: .pageScaleToFit, autoRotate: true) else {
-            return
-        }
-        operation.showsPrintPanel = true
-        operation.showsProgressPanel = true
-        operation.run()
-    }
-}
-
-private struct PDFPreviewRepresentable: NSViewRepresentable {
-    let url: URL
-
-    func makeNSView(context: Context) -> PDFView {
-        let view = PDFView()
-        view.autoScales = true
-        view.displayMode = .singlePageContinuous
-        view.displaysAsBook = false
-        view.backgroundColor = NSColor.textBackgroundColor
-        return view
-    }
-
-    func updateNSView(_ nsView: PDFView, context: Context) {
-        if nsView.document?.documentURL != url {
-            nsView.document = PDFDocument(url: url)
-        }
     }
 }
