@@ -1,0 +1,40 @@
+name: Build And Release macOS App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Release App
+        run: |
+          xcodebuild \
+            -project LabelMerger.xcodeproj \
+            -scheme LabelMerger \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY=- \
+            build
+
+      - name: Package App
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release/LabelMerger.app"
+          test -d "$APP_PATH"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" LabelMerger-macOS.zip
+
+      - name: Publish Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: LabelMerger-macOS.zip
